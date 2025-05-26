@@ -1,0 +1,829 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dijkstra's Algorithm for Network Routing</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            min-height: 100vh;
+            color: #333;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        h1 {
+            color: #2c3e50;
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            background: linear-gradient(45deg, #3498db, #2c3e50);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .subtitle {
+            color: #7f8c8d;
+            font-size: 1.2em;
+            margin-bottom: 20px;
+        }
+        
+        .controls {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+        
+        button {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        }
+        
+        .start-btn {
+            background: linear-gradient(45deg, #27ae60, #2ecc71);
+            color: white;
+        }
+        
+        .start-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(39, 174, 96, 0.4);
+        }
+        
+        .step-btn {
+            background: linear-gradient(45deg, #3498db, #2980b9);
+            color: white;
+        }
+        
+        .step-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(52, 152, 219, 0.4);
+        }
+        
+        .reset-btn {
+            background: linear-gradient(45deg, #e74c3c, #c0392b);
+            color: white;
+        }
+        
+        .reset-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(231, 76, 60, 0.4);
+        }
+        
+        .auto-btn {
+            background: linear-gradient(45deg, #f39c12, #e67e22);
+            color: white;
+        }
+        
+        .auto-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(243, 156, 18, 0.4);
+        }
+        
+        select {
+            padding: 12px 20px;
+            border-radius: 25px;
+            border: 2px solid #bdc3c7;
+            font-size: 16px;
+            background: white;
+            color: #2c3e50;
+            font-weight: 600;
+        }
+        
+        .main-content {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+        
+        .network-panel {
+            background: #fff;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        }
+        
+        .info-panel {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        
+        .info-section {
+            background: #f8f9fa;
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+        }
+        
+        .info-section h3 {
+            color: #2c3e50;
+            margin-bottom: 15px;
+            font-size: 1.3em;
+            border-bottom: 3px solid #3498db;
+            padding-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .routing-tables {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-top: 30px;
+        }
+        
+        .routing-table {
+            background: #fff;
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+            border: 3px solid #ecf0f1;
+        }
+        
+        .routing-table.active {
+            border-color: #3498db;
+            box-shadow: 0 8px 25px rgba(52, 152, 219, 0.3);
+        }
+        
+        .routing-table h4 {
+            color: #2c3e50;
+            margin-bottom: 15px;
+            font-size: 1.2em;
+            text-align: center;
+            background: linear-gradient(45deg, #3498db, #2980b9);
+            color: white;
+            padding: 10px;
+            border-radius: 10px;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+        
+        th, td {
+            padding: 10px 8px;
+            text-align: center;
+            border: 1px solid #e2e8f0;
+            font-size: 14px;
+        }
+        
+        th {
+            background: linear-gradient(45deg, #34495e, #2c3e50);
+            color: white;
+            font-weight: 600;
+            font-size: 12px;
+        }
+        
+        .visited-row {
+            background-color: #d5f4e6 !important;
+            font-weight: bold;
+        }
+        
+        .current-row {
+            background-color: #fff3cd !important;
+            font-weight: bold;
+        }
+        
+        .updated-cell {
+            background-color: #cce5ff !important;
+            animation: highlight 1s ease-in-out;
+        }
+        
+        @keyframes highlight {
+            0% { background-color: #ffeb3b; }
+            100% { background-color: #cce5ff; }
+        }
+        
+        .step-info {
+            background: linear-gradient(45deg, #e8f4fd, #ffffff);
+            padding: 20px;
+            border-radius: 12px;
+            border-left: 5px solid #3498db;
+            font-weight: 500;
+            line-height: 1.6;
+        }
+        
+        .algorithm-status {
+            text-align: center;
+            padding: 15px;
+            border-radius: 10px;
+            font-weight: bold;
+            font-size: 1.1em;
+        }
+        
+        .status-ready {
+            background: #e8f5e8;
+            color: #27ae60;
+            border: 2px solid #27ae60;
+        }
+        
+        .status-running {
+            background: #fff3cd;
+            color: #f39c12;
+            border: 2px solid #f39c12;
+        }
+        
+        .status-finished {
+            background: #d4edda;
+            color: #155724;
+            border: 2px solid #27ae60;
+        }
+        
+        #networkCanvas {
+            border: 3px solid #ecf0f1;
+            border-radius: 12px;
+            display: block;
+            margin: 0 auto;
+            background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
+        }
+        
+        .legend {
+            display: flex;
+            justify-content: center;
+            gap: 25px;
+            margin: 20px 0;
+            flex-wrap: wrap;
+        }
+        
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 18px;
+            background: white;
+            border-radius: 25px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            font-weight: 600;
+        }
+        
+        .legend-color {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            border: 3px solid #2c3e50;
+        }
+        
+        .unvisited { background: linear-gradient(45deg, #ecf0f1, #bdc3c7); }
+        .current { background: linear-gradient(45deg, #f1c40f, #f39c12); }
+        .visited { background: linear-gradient(45deg, #2ecc71, #27ae60); }
+        
+        .network-info {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-top: 15px;
+        }
+        
+        .metric-card {
+            background: linear-gradient(45deg, #f8f9fa, #ffffff);
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+            border: 2px solid #ecf0f1;
+        }
+        
+        .metric-value {
+            font-size: 2em;
+            font-weight: bold;
+            color: #3498db;
+        }
+        
+        .metric-label {
+            color: #7f8c8d;
+            font-size: 0.9em;
+            margin-top: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🌐 Dijkstra's Algorithm for Network Routing</h1>
+            <div class="subtitle">Shortest Path Routing Protocol Simulation</div>
+        </div>
+        
+        <div class="controls">
+            <select id="sourceSelect">
+                <option value="A">🔌 Start from Router A</option>
+                <option value="B">🔌 Start from Router B</option>
+                <option value="C">🔌 Start from Router C</option>
+                <option value="D">🔌 Start from Router D</option>
+            </select>
+            <button class="start-btn" onclick="startAlgorithm()">🚀 Initialize Routing</button>
+            <button class="step-btn" onclick="nextStep()">⏭️ Next Step</button>
+            <button class="auto-btn" onclick="autoRun()">🤖 Auto Run</button>
+            <button class="reset-btn" onclick="resetVisualization()">🔄 Reset</button>
+        </div>
+        
+        <div class="legend">
+            <div class="legend-item">
+                <div class="legend-color unvisited"></div>
+                <span>Unprocessed Router</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color current"></div>
+                <span>Current Router</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color visited"></div>
+                <span>Processed Router</span>
+            </div>
+        </div>
+        
+        <div class="main-content">
+            <div class="network-panel">
+                <h3>🌐 Network Topology</h3>
+                <canvas id="networkCanvas" width="600" height="450"></canvas>
+                <div class="network-info">
+                    <div class="metric-card">
+                        <div class="metric-value" id="stepCounter">0</div>
+                        <div class="metric-label">Algorithm Steps</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-value" id="processedNodes">0</div>
+                        <div class="metric-label">Processed Routers</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="info-panel">
+                <div class="info-section">
+                    <h3>📊 Algorithm Status</h3>
+                    <div class="algorithm-status status-ready" id="algorithmStatus">
+                        Ready to start
+                    </div>
+                </div>
+                
+                <div class="info-section">
+                    <h3>ℹ️ Current Step</h3>
+                    <div class="step-info" id="stepInfo">
+                        Select a source router and click "Initialize Routing" to begin the shortest path calculation
+                    </div>
+                </div>
+                
+                <div class="info-section">
+                    <h3>📋 Distance Vector Table</h3>
+                    <table id="distanceTable">
+                        <thead>
+                            <tr>
+                                <th>Router</th>
+                                <th>Cost</th>
+                                <th>Next Hop</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody id="distanceTableBody">
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        
+        <div class="info-section">
+            <h3>🗺️ Routing Tables (Final State)</h3>
+            <div class="routing-tables" id="routingTablesContainer">
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Network topology with link costs (representing bandwidth, latency, etc.)
+        const networkTopology = {
+            'A': {'B': 2, 'C': 1},  // Router A connects to B (cost 2) and C (cost 1)
+            'B': {'A': 2, 'D': 3},  // Router B connects to A (cost 2) and D (cost 3)
+            'C': {'A': 1, 'D': 1},  // Router C connects to A (cost 1) and D (cost 1)
+            'D': {'B': 3, 'C': 1}   // Router D connects to B (cost 3) and C (cost 1)
+        };
+        
+        // Router positions for network visualization
+        const routerPositions = {
+            'A': {x: 150, y: 120, ip: '192.168.1.1'},
+            'B': {x: 450, y: 120, ip: '192.168.2.1'},
+            'C': {x: 150, y: 330, ip: '192.168.3.1'},
+            'D': {x: 450, y: 330, ip: '192.168.4.1'}
+        };
+        
+        // Algorithm state variables
+        let distances = {};
+        let previousHop = {};
+        let visited = {};
+        let unvisited = new Set();
+        let currentRouter = null;
+        let sourceRouter = 'A';
+        let algorithmState = 'ready';
+        let stepCount = 0;
+        let autoRunning = false;
+        let routingTables = {};
+        
+        const canvas = document.getElementById('networkCanvas');
+        const ctx = canvas.getContext('2d');
+        
+        function initializeRouting(source) {
+            sourceRouter = source;
+            distances = {};
+            previousHop = {};
+            visited = {};
+            unvisited = new Set();
+            currentRouter = null;
+            stepCount = 0;
+            algorithmState = 'ready';
+            autoRunning = false;
+            
+            // Initialize distance vector and routing state
+            for (let router in networkTopology) {
+                distances[router] = router === source ? 0 : Infinity;
+                previousHop[router] = null;
+                visited[router] = false;
+                unvisited.add(router);
+            }
+            
+            currentRouter = source;
+            updateNetworkVisualization();
+            updateDistanceTable();
+            updateAlgorithmStatus('Ready to process routing from ' + source);
+            document.getElementById('stepInfo').innerHTML = `
+                <strong>🔧 Initialization Complete</strong><br>
+                Source router: ${source} (${routerPositions[source].ip})<br>
+                Distance to ${source}: 0 (directly connected)<br>
+                Distance to others: ∞ (unknown paths)<br>
+                Ready to calculate shortest paths...
+            `;
+            document.getElementById('stepCounter').textContent = '0';
+            document.getElementById('processedNodes').textContent = '0';
+        }
+        
+        function startAlgorithm() {
+            const source = document.getElementById('sourceSelect').value;
+            initializeRouting(source);
+            algorithmState = 'running';
+            updateAlgorithmStatus('Algorithm running...');
+        }
+        
+        function nextStep() {
+            if (algorithmState !== 'running' || unvisited.size === 0) return;
+            
+            stepCount++;
+            
+            // Find unvisited router with minimum cost
+            let minCost = Infinity;
+            let minRouter = null;
+            
+            for (let router of unvisited) {
+                if (distances[router] < minCost) {
+                    minCost = distances[router];
+                    minRouter = router;
+                }
+            }
+            
+            if (minRouter === null || minCost === Infinity) {
+                algorithmState = 'finished';
+                updateAlgorithmStatus('Routing table computation complete!');
+                generateRoutingTables();
+                document.getElementById('stepInfo').innerHTML = `
+                    <strong>✅ Algorithm Completed!</strong><br>
+                    All reachable routers have been processed.<br>
+                    Routing tables have been generated.<br>
+                    Network convergence achieved.
+                `;
+                return;
+            }
+            
+            currentRouter = minRouter;
+            
+            // Relax edges (update distances to neighbors)
+            let updatedRouters = [];
+            for (let neighbor in networkTopology[currentRouter]) {
+                if (!visited[neighbor]) {
+                    let newCost = distances[currentRouter] + networkTopology[currentRouter][neighbor];
+                    if (newCost < distances[neighbor]) {
+                        distances[neighbor] = newCost;
+                        previousHop[neighbor] = currentRouter;
+                        updatedRouters.push(neighbor);
+                    }
+                }
+            }
+            
+            // Mark current router as processed
+            visited[currentRouter] = true;
+            unvisited.delete(currentRouter);
+            
+            // Update step information
+            let stepText = `<strong>🔄 Step ${stepCount}: Processing Router ${currentRouter}</strong><br>`;
+            stepText += `Router: ${currentRouter} (${routerPositions[currentRouter].ip})<br>`;
+            stepText += `Cost from source: ${distances[currentRouter]}<br>`;
+            
+            if (updatedRouters.length > 0) {
+                stepText += `📡 Updated paths to: ${updatedRouters.map(r => `${r}(${routerPositions[r].ip})`).join(', ')}<br>`;
+                stepText += `New shorter paths discovered via ${currentRouter}`;
+            } else {
+                stepText += `No path improvements found`;
+            }
+            
+            document.getElementById('stepInfo').innerHTML = stepText;
+            document.getElementById('stepCounter').textContent = stepCount;
+            document.getElementById('processedNodes').textContent = Object.keys(visited).filter(r => visited[r]).length;
+            
+            if (unvisited.size === 0) {
+                algorithmState = 'finished';
+                updateAlgorithmStatus('Routing computation complete!');
+                generateRoutingTables();
+                document.getElementById('stepInfo').innerHTML += '<br><strong>🎉 All routing tables computed!</strong>';
+            }
+            
+            updateNetworkVisualization();
+            updateDistanceTable();
+        }
+        
+        function autoRun() {
+            if (autoRunning) return;
+            
+            if (algorithmState === 'ready') {
+                startAlgorithm();
+            }
+            
+            autoRunning = true;
+            const interval = setInterval(() => {
+                if (algorithmState === 'running' && unvisited.size > 0) {
+                    nextStep();
+                } else {
+                    autoRunning = false;
+                    clearInterval(interval);
+                }
+            }, 1500);
+        }
+        
+        function resetVisualization() {
+            autoRunning = false;
+            const source = document.getElementById('sourceSelect').value;
+            initializeRouting(source);
+            document.getElementById('routingTablesContainer').innerHTML = '';
+            updateAlgorithmStatus('Reset complete. Ready to start.');
+        }
+        
+        function updateAlgorithmStatus(message) {
+            const statusEl = document.getElementById('algorithmStatus');
+            statusEl.textContent = message;
+            
+            statusEl.className = 'algorithm-status ';
+            if (algorithmState === 'ready') {
+                statusEl.className += 'status-ready';
+            } else if (algorithmState === 'running') {
+                statusEl.className += 'status-running';
+            } else if (algorithmState === 'finished') {
+                statusEl.className += 'status-finished';
+            }
+        }
+        
+        function updateNetworkVisualization() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // Draw network links with costs
+            ctx.strokeStyle = '#34495e';
+            ctx.lineWidth = 3;
+            ctx.font = 'bold 14px Arial';
+            
+            const links = [
+                {from: 'A', to: 'B', cost: 2},
+                {from: 'A', to: 'C', cost: 1},
+                {from: 'B', to: 'D', cost: 3},
+                {from: 'C', to: 'D', cost: 1}
+            ];
+            
+            // Draw links
+            links.forEach(link => {
+                const fromPos = routerPositions[link.from];
+                const toPos = routerPositions[link.to];
+                
+                ctx.beginPath();
+                ctx.moveTo(fromPos.x, fromPos.y);
+                ctx.lineTo(toPos.x, toPos.y);
+                ctx.stroke();
+                
+                // Draw cost label
+                const midX = (fromPos.x + toPos.x) / 2;
+                const midY = (fromPos.y + toPos.y) / 2;
+                
+                ctx.fillStyle = '#ffffff';
+                ctx.fillRect(midX - 15, midY - 12, 30, 24);
+                ctx.strokeStyle = '#34495e';
+                ctx.strokeRect(midX - 15, midY - 12, 30, 24);
+                
+                ctx.fillStyle = '#e74c3c';
+                ctx.textAlign = 'center';
+                ctx.fillText(link.cost.toString(), midX, midY + 5);
+            });
+            
+            // Draw routers
+            for (let router in routerPositions) {
+                const pos = routerPositions[router];
+                
+                // Router status color
+                let fillColor, strokeColor;
+                if (visited[router]) {
+                    fillColor = '#2ecc71'; // Green for processed
+                    strokeColor = '#27ae60';
+                } else if (router === currentRouter) {
+                    fillColor = '#f1c40f'; // Yellow for current
+                    strokeColor = '#f39c12';
+                } else {
+                    fillColor = '#ecf0f1'; // Gray for unprocessed
+                    strokeColor = '#bdc3c7';
+                }
+                
+                // Draw router circle
+                ctx.fillStyle = fillColor;
+                ctx.beginPath();
+                ctx.arc(pos.x, pos.y, 35, 0, 2 * Math.PI);
+                ctx.fill();
+                ctx.strokeStyle = strokeColor;
+                ctx.lineWidth = 4;
+                ctx.stroke();
+                
+                // Draw router icon
+                ctx.fillStyle = '#2c3e50';
+                ctx.font = 'bold 18px Arial';
+                ctx.textAlign = 'center';
+                ctx.fillText('🔌', pos.x, pos.y - 8);
+                
+                // Draw router label
+                ctx.font = 'bold 14px Arial';
+                ctx.fillText(router, pos.x, pos.y + 8);
+                
+                // Draw distance/cost
+                ctx.font = '12px Arial';
+                ctx.fillStyle = '#2c3e50';
+                const costText = distances[router] === Infinity ? '∞' : distances[router].toString();
+                ctx.fillText(`Cost: ${costText}`, pos.x, pos.y + 55);
+                
+                // Draw IP address
+                ctx.font = '10px Arial';
+                ctx.fillStyle = '#7f8c8d';
+                ctx.fillText(pos.ip, pos.x, pos.y + 70);
+            }
+        }
+        
+        function updateDistanceTable() {
+            const tbody = document.getElementById('distanceTableBody');
+            tbody.innerHTML = '';
+            
+            for (let router in networkTopology) {
+                const row = tbody.insertRow();
+                
+                if (visited[router]) {
+                    row.className = 'visited-row';
+                } else if (router === currentRouter) {
+                    row.className = 'current-row';
+                }
+                
+                row.insertCell(0).innerHTML = `🔌 ${router}<br><small>${routerPositions[router].ip}</small>`;
+                row.insertCell(1).textContent = distances[router] === Infinity ? '∞' : distances[router];
+                row.insertCell(2).textContent = previousHop[router] ? `${previousHop[router]} (${routerPositions[previousHop[router]].ip})` : 'Direct';
+                
+                let status = '';
+                if (visited[router]) status = '✅ Processed';
+                else if (router === currentRouter) status = '🔄 Processing';
+                else status = '⏳ Pending';
+                
+                row.insertCell(3).textContent = status;
+            }
+        }
+        
+        function generateRoutingTables() {
+            const container = document.getElementById('routingTablesContainer');
+            container.innerHTML = '';
+            
+            for (let router in networkTopology) {
+                const tableDiv = document.createElement('div');
+                tableDiv.className = 'routing-table';
+                if (router === sourceRouter) {
+                    tableDiv.classList.add('active');
+                }
+                
+                tableDiv.innerHTML = `
+                    <h4>🔌 Router ${router} (${routerPositions[router].ip})</h4>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Destination</th>
+                                <th>Cost</th>
+                                <th>Next Hop</th>
+                                <th>Interface</th>
+                            </tr>
+                        </thead>
+                        <tbody id="table-${router}">
+                        </tbody>
+                    </table>
+                `;
+                
+                container.appendChild(tableDiv);
+                
+                const tbody = document.getElementById(`table-${router}`);
+                
+                for (let dest in networkTopology) {
+                    if (dest !== router) {
+                        const row = tbody.insertRow();
+                        
+                        // Calculate path from this router to destination
+                        const pathInfo = calculatePathFromRouter(router, dest);
+                        
+                        row.insertCell(0).innerHTML = `${dest}<br><small>${routerPositions[dest].ip}</small>`;
+                        row.insertCell(1).textContent = pathInfo.cost === Infinity ? '∞' : pathInfo.cost;
+                        row.insertCell(2).textContent = pathInfo.nextHop || 'Unreachable';
+                        row.insertCell(3).textContent = pathInfo.nextHop ? `eth${Object.keys(networkTopology[router]).indexOf(pathInfo.nextHop)}` : '-';
+                    }
+                }
+            }
+        }
+        
+        function calculatePathFromRouter(from, to) {
+            // Use the computed shortest paths from the source
+            if (from === sourceRouter) {
+                return {
+                    cost: distances[to],
+                    nextHop: getFirstHopInPath(to)
+                };
+            }
+            
+            // For other routers, we'd need to run Dijkstra from each router
+            // For simplicity, showing the topology-based next hop
+            if (networkTopology[from][to]) {
+                return {
+                    cost: networkTopology[from][to],
+                    nextHop: to
+                };
+            }
+            
+            // Find indirect path (simplified)
+            let minCost = Infinity;
+            let bestNextHop = null;
+            
+            for (let neighbor in networkTopology[from]) {
+                if (distances[neighbor] !== Infinity && distances[to] !== Infinity) {
+                    let totalCost = networkTopology[from][neighbor] + distances[to] - distances[neighbor];
+                    if (totalCost < minCost) {
+                        minCost = totalCost;
+                        bestNextHop = neighbor;
+                    }
+                }
+            }
+            
+            return {
+                cost: minCost === Infinity ? Infinity : minCost,
+                nextHop: bestNextHop
+            };
+        }
+        
+        function getFirstHopInPath(destination) {
+            if (!previousHop[destination]) return null;
+            
+            let current = destination;
+            let path = [];
+            
+            while (previousHop[current] !== null) {
+                path.unshift(current);
+                current = previousHop[current];
+            }
+            path.unshift(current);
+            
+            return path.length > 1 ? path[1] : null;
+        }
+        
+        // Initialize the visualization
+        initializeRouting('A');
+    </script>
+</body>
+</html>
